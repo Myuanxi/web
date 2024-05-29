@@ -1,0 +1,84 @@
+﻿@{
+    ViewData["Title"] = "登录";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <style>
+        /* 居中对齐登录框 */
+        .login-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+
+        /* 输入框样式 */
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        /* 按钮样式 */
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* 错误消息样式 */
+        .error-message {
+            display: none;
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>@ViewData["Title"]</h2>
+        <form asp-action="Login" method="post">
+            <div>
+                <label for="username">用户名：</label>
+                <input type="text" id="username" name="username" required />
+            </div>
+            <div>
+                <label for="password">密码：</label>
+                <input type="password" id="password" name="password" required />
+            </div>
+            <button type="submit">登录</button>
+        </form>
+        @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+        {
+            <div class="error-message">@ViewBag.ErrorMessage</div>
+        }
+    </div>
+
+    <!-- 在此处添加 JavaScript 代码以根据密码验证结果显示或隐藏错误消息 -->
+    <script>
+        // 获取密码错误消息元素
+        var errorMessage = document.querySelector(".error-message");
+
+        // 如果密码错误，则显示错误消息
+        var passwordError = "@ViewBag.ErrorMessage";
+        if (passwordError.trim() !== "") {
+            errorMessage.style.display = "block";
+        }
+    </script>
+</body>
+</html>
