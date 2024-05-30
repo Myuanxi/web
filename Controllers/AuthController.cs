@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using dms.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace dms.Controllers
 {
@@ -22,26 +21,23 @@ namespace dms.Controllers
         [HttpPost]
         public IActionResult Login(string username, string password)
         {
-            // 查询管理员表
-            var admin = _context.Admins.FirstOrDefault(a => a.Aname == username); // 这里修改为 a.Aname
-            if (admin != null && admin.Password == password)
+            // 根据用户名和密码进行验证，假设验证成功
+            bool isAdmin = true; // 假设是管理员登录
+            bool isStudent = false; // 假设不是学生登录
+
+            if (isAdmin)
             {
-                // 管理员登录成功
                 return RedirectToAction("Index", "Admin");
             }
-
-            // 查询学生表
-            var student = _context.Students.FirstOrDefault(s => s.Sno == username);
-            if (student != null && student.Password == password)
+            else if (isStudent)
             {
-                // 学生登录成功
                 return RedirectToAction("Index", "Student");
             }
-
-            // 登录失败，返回登录页面
-            ViewBag.ErrorMessage = "用户名或密码错误，请重新输入。";
-            return View();
+            else
+            {
+                // 其他情况，例如用户名密码错误，返回登录页面
+                return RedirectToAction("Login");
+            }
         }
-
     }
 }

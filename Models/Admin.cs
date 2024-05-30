@@ -1,8 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
-namespace dms.Models
+﻿namespace dms.Models
 {
-    [Table("admin")]
     public class Admin
     {
         public int Id { get; set; }
