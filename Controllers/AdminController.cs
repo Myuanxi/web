@@ -31,11 +31,11 @@ namespace dms.Controllers
         {
             if (buildingNumber.HasValue && dormNumber.HasValue)
             {
-                List<Dormitory> dormitories;
+                List<Room> rooms;
                 try
                 {
-                    dormitories = _context.Dormitories
-                        .Where(d => d.AId == buildingNumber.Value && d.Num == dormNumber.Value)
+                    rooms = _context.Rooms
+                        .Where(r => r.DId == buildingNumber.Value && r.Num == dormNumber.Value)
                         .ToList();
                 }
                 catch (Exception ex)
@@ -44,7 +44,7 @@ namespace dms.Controllers
                     // Log the exception (ex)
                     return View(); // 返回一个错误视图或者显示错误信息
                 }
-                return View(dormitories);
+                return View(rooms);
             }
             return View();
         }

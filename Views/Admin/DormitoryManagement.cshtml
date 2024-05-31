@@ -1,4 +1,4 @@
-﻿@model IEnumerable<dms.Models.Dormitory>
+﻿@model IEnumerable<dms.Models.Room>
 
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -11,47 +11,125 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #f9f9f9;
+        }
+
+        h2, h3 {
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            margin-right: 10px;
+        }
+
+        input[type="number"] {
+            margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .back-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            border: none;
+            background-color: #6c757d;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
         }
     </style>
 </head>
 <body>
-    <h2>宿舍查询</h2>
-    <form method="post">
-        <label for="buildingNumber">楼号:</label>
-        <input type="number" id="buildingNumber" name="buildingNumber" required />
-        <label for="dormNumber">宿舍号:</label>
-        <input type="number" id="dormNumber" name="dormNumber" required />
-        <button type="submit">查询</button>
-    </form>
+    <div class="container">
+        <h2>宿舍查询</h2>
+        <form method="post">
+            <label for="buildingNumber">楼号:</label>
+            <input type="number" id="buildingNumber" name="buildingNumber" required />
+            <label for="dormNumber">宿舍号:</label>
+            <input type="number" id="dormNumber" name="dormNumber" required />
+            <button type="submit">查询</button>
+        </form>
 
-    <h3>查询结果</h3>
-    @if (Model != null && Model.Any())
-    {
-        <table>
-            <thead>
-                <tr>
-                    <th>宿舍ID</th>
-                    <th>楼号</th>
-                    <th>宿舍号</th>
-                    <th>性别</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var dormitory in Model)
-                {
+        <h3>查询结果</h3>
+        @if (Model != null && Model.Any())
+        {
+            <table>
+                <thead>
                     <tr>
-                        <td>@dormitory.Id</td>
-                        <td>@dormitory.AId</td>
-                        <td>@dormitory.Num</td>
-                        <td>@dormitory.SGender</td>
+                        <th>宿舍ID</th>
+                        <th>楼号</th>
+                        <th>宿舍号</th>
+                        <th>保证金</th>
+                        <th>价格</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <p>未找到相关宿舍信息。</p>
-    }
+                </thead>
+                <tbody>
+                    @foreach (var room in Model)
+                    {
+                        <tr>
+                            <td>@room.Id</td>
+                            <td>@room.DId</td>
+                            <td>@room.Num</td>
+                            <td>@room.Margin</td>
+                            <td>@room.Price</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>未找到相关宿舍信息。</p>
+        }
+
+        <a href="@Url.Action("Index", "Admin")" class="back-button">返回</a>
+    </div>
 </body>
 </html>
