@@ -1,0 +1,163 @@
+﻿@model IEnumerable<dms.Models.Student>
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生管理</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #f9f9f9;
+        }
+
+        h2, h3 {
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            margin-right: 10px;
+        }
+
+        input[type="text"], input[type="number"] {
+            margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 200px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .back-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            border: none;
+            background-color: #6c757d;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>学生管理</h2>
+        <form method="post">
+            <label for="sno">学号:</label>
+            <input type="text" id="sno" name="sno" />
+            <label for="sname">姓名:</label>
+            <input type="text" id="sname" name="sname" />
+            <label for="gender">性别:</label>
+            <input type="text" id="gender" name="gender" />
+            <label for="age">年龄:</label>
+            <input type="number" id="age" name="age" />
+            <label for="tel">电话:</label>
+            <input type="text" id="tel" name="tel" />
+            <label for="u_id">用户ID:</label>
+            <input type="number" id="u_id" name="u_id" />
+            <label for="m_id">宿舍楼ID:</label>
+            <input type="number" id="m_id" name="m_id" />
+            <label for="class">班级:</label>
+            <input type="number" id="class" name="class" />
+            <label for="d_id">宿舍ID:</label>
+            <input type="number" id="d_id" name="d_id" />
+            <label for="r_id">房间ID:</label>
+            <input type="number" id="r_id" name="r_id" />
+            <button type="submit">查询</button>
+        </form>
+
+        <h3>查询结果</h3>
+        @if (Model != null && Model.Any())
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>学号</th>
+                        <th>姓名</th>
+                        <th>性别</th>
+                        <th>年龄</th>
+                        <th>电话</th>
+                        <th>用户ID</th>
+                        <th>宿舍楼ID</th>
+                        <th>班级</th>
+                        <th>宿舍ID</th>
+                        <th>房间ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var student in Model)
+                    {
+                        <tr>
+                            <td>@student.Id</td>
+                            <td>@student.Sno</td>
+                            <td>@student.Sname</td>
+                            <td>@student.Gender</td>
+                            <td>@student.Age</td>
+                            <td>@student.Tel</td>
+                            <td>@student.UId</td>
+                            <td>@student.MId</td>
+                            <td>@student.Class</td>
+                            <td>@student.DId</td>
+                            <td>@student.RId</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>未找到相关学生信息。</p>
+        }
+
+        <a href="@Url.Action("Index", "Admin")" class="back-button">返回</a>
+    </div>
+</body>
+</html>

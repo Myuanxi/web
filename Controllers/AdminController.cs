@@ -48,5 +48,75 @@ namespace dms.Controllers
             }
             return View();
         }
+
+        public IActionResult StudentManagement()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult StudentManagement(string sno, string sname, string gender, int? age, string tel, int? u_id, int? m_id, int? @class, int? d_id, int? r_id)
+        {
+            var query = _context.Students.AsQueryable();
+
+            if (!string.IsNullOrEmpty(sno))
+                query = query.Where(s => s.Sno == sno);
+
+            if (!string.IsNullOrEmpty(sname))
+                query = query.Where(s => s.Sname == sname);
+
+            if (!string.IsNullOrEmpty(gender))
+                query = query.Where(s => s.Gender == gender);
+
+            if (age.HasValue)
+                query = query.Where(s => s.Age == age.Value);
+
+            if (!string.IsNullOrEmpty(tel))
+                query = query.Where(s => s.Tel == tel);
+
+            if (u_id.HasValue)
+                query = query.Where(s => s.UId == u_id.Value);
+
+            if (m_id.HasValue)
+                query = query.Where(s => s.MId == m_id.Value);
+
+            if (@class.HasValue)
+                query = query.Where(s => s.Class == @class.Value);
+
+            if (d_id.HasValue)
+                query = query.Where(s => s.DId == d_id.Value);
+
+            if (r_id.HasValue)
+                query = query.Where(s => s.RId == r_id.Value);
+
+            var students = query.ToList();
+            return View(students);
+        }
+
+        public IActionResult EntryRegistration()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult EntryRegistration(int? d_id, int? s_id, DateTime? out_date, DateTime? in_date)
+        {
+            var query = _context.InOuts.AsQueryable();
+
+            if (d_id.HasValue)
+                query = query.Where(io => io.DId == d_id.Value);
+
+            if (s_id.HasValue)
+                query = query.Where(io => io.SId == s_id.Value);
+
+            if (out_date.HasValue)
+                query = query.Where(io => io.OutDate >= out_date.Value);
+
+            if (in_date.HasValue)
+                query = query.Where(io => io.InDate <= in_date.Value);
+
+            var inOutRecords = query.ToList();
+            return View(inOutRecords);
+        }
     }
 }
