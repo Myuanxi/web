@@ -14,5 +14,6 @@ namespace dms.Models
 
         public DbSet<Student> Students { get; set; }
         public DbSet<InOut> InOuts { get; set; }
+        public DbSet<Visit> Visits { get; set; }
     }
 }

@@ -118,5 +118,33 @@ namespace dms.Controllers
             var inOutRecords = query.ToList();
             return View(inOutRecords);
         }
+        public IActionResult VisitorRegistration()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult VisitorRegistration(int? d_id, int? s_id, string name, DateTime? in_date, DateTime? out_date)
+        {
+            var query = _context.Visits.AsQueryable();
+
+            if (d_id.HasValue)
+                query = query.Where(v => v.DId == d_id.Value);
+
+            if (s_id.HasValue)
+                query = query.Where(v => v.SId == s_id.Value);
+
+            if (!string.IsNullOrEmpty(name))
+                query = query.Where(v => v.Name.Contains(name));
+
+            if (in_date.HasValue)
+                query = query.Where(v => v.InDate >= in_date.Value);
+
+            if (out_date.HasValue)
+                query = query.Where(v => v.OutDate <= out_date.Value);
+
+            var visitRecords = query.ToList();
+            return View(visitRecords);
+        }
     }
 }

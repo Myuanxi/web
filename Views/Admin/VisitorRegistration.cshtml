@@ -1,0 +1,143 @@
+﻿@model IEnumerable<dms.Models.Visit>
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>来访管理</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #f9f9f9;
+        }
+
+        h2, h3 {
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            margin-right: 10px;
+        }
+
+        input[type="number"], input[type="text"], input[type="datetime-local"] {
+            margin-bottom: 10px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 200px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .back-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            border: none;
+            background-color: #6c757d;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>来访管理</h2>
+        <form method="post">
+            <label for="d_id">宿舍ID:</label>
+            <input type="number" id="d_id" name="d_id" />
+            <label for="s_id">学生ID:</label>
+            <input type="number" id="s_id" name="s_id" />
+            <label for="name">访客姓名:</label>
+            <input type="text" id="name" name="name" />
+            <label for="in_date">入门日期:</label>
+            <input type="datetime-local" id="in_date" name="in_date" />
+            <label for="out_date">出门日期:</label>
+            <input type="datetime-local" id="out_date" name="out_date" />
+            <button type="submit">查询</button>
+        </form>
+
+        <h3>查询结果</h3>
+        @if (Model != null && Model.Any())
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>宿舍ID</th>
+                        <th>学生ID</th>
+                        <th>访客姓名</th>
+                        <th>入门日期</th>
+                        <th>出门日期</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var record in Model)
+                    {
+                        <tr>
+                            <td>@record.Id</td>
+                            <td>@record.DId</td>
+                            <td>@record.SId</td>
+                            <td>@record.Name</td>
+                            <td>@record.InDate</td>
+                            <td>@record.OutDate?.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>未找到相关来访记录。</p>
+        }
+
+        <a href="@Url.Action("Index", "Admin")" class="back-button">返回</a>
+    </div>
+</body>
+</html>
