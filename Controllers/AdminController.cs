@@ -146,5 +146,30 @@ namespace dms.Controllers
             var visitRecords = query.ToList();
             return View(visitRecords);
         }
+        public IActionResult Notifications()
+        {
+            var notifications = _context.Notifications.ToList();
+            return View(notifications);
+        }
+
+        [HttpPost]
+        public IActionResult Notifications(string title, string content)
+        {
+            if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(content))
+            {
+                var notification = new Notification
+                {
+                    Title = title,
+                    Content = content,
+                    CreatedAt = DateTime.Now
+                };
+
+                _context.Notifications.Add(notification);
+                _context.SaveChanges();
+            }
+
+            var notifications = _context.Notifications.ToList();
+            return View(notifications);
+        }
     }
 }
