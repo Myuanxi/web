@@ -1,0 +1,101 @@
+﻿@model IEnumerable<dms.Models.Notification>
+
+@{
+    ViewData["Title"] = "查看通知";
+}
+
+<style>
+    /* 容器样式 */
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        height: 100vh;
+        padding-top: 50px;
+    }
+
+    /* 页面内容样式 */
+    .content {
+        width: 80%;
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 表格样式 */
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #ccc;
+    }
+
+    th, td {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    /* 上一页、下一页链接样式 */
+    .pagination {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+        .pagination a {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 0 4px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+
+            .pagination a.disabled {
+                background-color: #ccc;
+                pointer-events: none;
+            }
+</style>
+
+<div class="container">
+    <div class="content">
+        <h1>查看通知</h1>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>标题</th>
+                    <th>内容</th>
+                    <th>时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var notification in Model)
+                {
+                    <tr>
+                        <td>@notification.Title</td>
+                        <td>@notification.Content</td>
+                        <td>@notification.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <div class="pagination">
+            @if (ViewBag.HasPreviousPage)
+            {
+                <a asp-action="Notifications" asp-route-pageIndex="@(ViewBag.PageIndex - 1)">上一页</a>
+            }
+            else
+            {
+                <a class="disabled">上一页</a>
+            }
+            @if (ViewBag.HasNextPage)
+            {
+                <a asp-action="Notifications" asp-route-pageIndex="@(ViewBag.PageIndex + 1)">下一页</a>
+            }
+            else
+            {
+                <a class="disabled">下一页</a>
+            }
+        </div>
+    </div>
+</div>

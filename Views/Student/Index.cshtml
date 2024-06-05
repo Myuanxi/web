@@ -1,9 +1,102 @@
-﻿<!DOCTYPE html>
-<html>
+﻿@{
+    ViewData["Title"] = "欢迎学生";
+}
+
+<!DOCTYPE html>
+<html lang="zh-CN">
 <head>
-    <title>Welcome Student</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>武汉大学学生宿舍管理系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .header .welcome {
+                margin-right: 20px;
+            }
+
+        .main {
+            display: flex;
+            flex: 1;
+        }
+
+        .sidebar {
+            width: 200px;
+            background-color: #f4f4f4;
+            padding: 10px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            height: calc(100vh - 50px); /* Adjust height according to the header height */
+            box-sizing: border-box;
+        }
+
+            .sidebar ul {
+                list-style-type: none;
+                padding: 0;
+            }
+
+                .sidebar ul li {
+                    margin: 15px 0;
+                }
+
+                    .sidebar ul li a {
+                        text-decoration: none;
+                        color: #333;
+                        font-weight: bold;
+                    }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome Student</h1>
+    <div class="header">
+        <h1>武汉大学学生宿舍管理系统</h1>
+        <div class="welcome">欢迎：@User.Identity.Name</div>
+    </div>
+    <div class="main">
+        <div class="sidebar">
+            <ul>
+                <li><a href="/Student/Notifications">查看通知</a></li>
+                <li><a href="#">宿舍报修</a></li>
+                <li><a href="#">场馆预约</a></li>
+                <li><a href="#">联系宿管</a></li>
+            </ul>
+        </div>
+        <div class="main-content" id="main-content">
+            <!-- 主体内容部分 -->
+        </div>
+    </div>
+
+    <script>
+        function showContent(section) {
+            const content = {
+                dormManagement: '宿舍管理内容...',
+                studentManagement: '学生管理内容...',
+                entryRegistration: '出入登记内容...',
+                visitorRegistration: '来访登记内容...',
+                notifications: '通知和提醒内容...'
+            };
+            document.getElementById('main-content').innerText = content[section];
+        }
+    </script>
 </body>
 </html>
