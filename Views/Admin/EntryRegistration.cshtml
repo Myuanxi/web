@@ -84,6 +84,26 @@
             cursor: pointer;
             text-decoration: none;
         }
+
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+            .pagination a {
+                display: inline-block;
+                padding: 8px 16px;
+                margin: 0 4px;
+                background-color: #007BFF;
+                color: white;
+                border-radius: 4px;
+                text-decoration: none;
+            }
+
+                .pagination a.disabled {
+                    background-color: #ccc;
+                    pointer-events: none;
+                }
     </style>
 </head>
 <body>
@@ -127,6 +147,25 @@
                     }
                 </tbody>
             </table>
+
+            <div class="pagination">
+                @if (ViewBag.HasPreviousPage)
+                {
+                    <a asp-action="EntryRegistration" asp-route-pageIndex="@(ViewBag.PageIndex - 1)">上一页</a>
+                }
+                else
+                {
+                    <a class="disabled">上一页</a>
+                }
+                @if (ViewBag.HasNextPage)
+                {
+                    <a asp-action="EntryRegistration" asp-route-pageIndex="@(ViewBag.PageIndex + 1)">下一页</a>
+                }
+                else
+                {
+                    <a class="disabled">下一页</a>
+                }
+            </div>
         }
         else
         {

@@ -62,6 +62,12 @@
         .back-button {
             margin-top: 20px;
             background-color: #6c757d;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            padding: 10px 20px;
+            border: none;
         }
 
         table {
@@ -79,6 +85,26 @@
         th {
             background-color: #f2f2f2;
         }
+
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+            .pagination a {
+                display: inline-block;
+                padding: 8px 16px;
+                margin: 0 4px;
+                background-color: #007BFF;
+                color: white;
+                border-radius: 4px;
+                text-decoration: none;
+            }
+
+                .pagination a.disabled {
+                    background-color: #ccc;
+                    pointer-events: none;
+                }
     </style>
 </head>
 <body>
@@ -116,7 +142,26 @@
             </tbody>
         </table>
 
-        <button onclick="window.location.href='/Admin/Index'" class="back-button">返回</button>
+        <div class="pagination">
+            @if (ViewBag.HasPreviousPage)
+            {
+                <a asp-action="Notifications" asp-route-pageIndex="@(ViewBag.PageIndex - 1)">上一页</a>
+            }
+            else
+            {
+                <a class="disabled">上一页</a>
+            }
+            @if (ViewBag.HasNextPage)
+            {
+                <a asp-action="Notifications" asp-route-pageIndex="@(ViewBag.PageIndex + 1)">下一页</a>
+            }
+            else
+            {
+                <a class="disabled">下一页</a>
+            }
+        </div>
+
+        <a href="@Url.Action("Index", "Admin")" class="back-button">返回</a>
     </div>
 </body>
 </html>

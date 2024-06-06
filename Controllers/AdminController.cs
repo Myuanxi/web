@@ -10,6 +10,7 @@ namespace dms.Controllers
     public class AdminController : Controller
     {
         private readonly DmsContext _context;
+        private const int PageSize = 10; // 每页显示的项目数
 
         public AdminController(DmsContext context)
         {
@@ -21,13 +22,23 @@ namespace dms.Controllers
             return View();
         }
 
-        public IActionResult DormitoryManagement()
+        public IActionResult DormitoryManagement(int pageIndex = 0)
         {
-            return View();
+            var totalRooms = _context.Rooms.Count();
+            var rooms = _context.Rooms
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+            ViewBag.HasPreviousPage = pageIndex > 0;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalRooms;
+            ViewBag.PageIndex = pageIndex;
+
+            return View(rooms);
         }
 
         [HttpPost]
-        public IActionResult DormitoryManagement(int? buildingNumber, int? dormNumber)
+        public IActionResult DormitoryManagement(int? buildingNumber, int? dormNumber, int pageIndex = 0)
         {
             if (buildingNumber.HasValue && dormNumber.HasValue)
             {
@@ -36,7 +47,14 @@ namespace dms.Controllers
                 {
                     rooms = _context.Rooms
                         .Where(r => r.DId == buildingNumber.Value && r.Num == dormNumber.Value)
+                        .Skip(pageIndex * PageSize)
+                        .Take(PageSize)
                         .ToList();
+
+                    var totalRooms = _context.Rooms.Count(r => r.DId == buildingNumber.Value && r.Num == dormNumber.Value);
+                    ViewBag.HasPreviousPage = pageIndex > 0;
+                    ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalRooms;
+                    ViewBag.PageIndex = pageIndex;
                 }
                 catch (Exception ex)
                 {
@@ -49,13 +67,23 @@ namespace dms.Controllers
             return View();
         }
 
-        public IActionResult StudentManagement()
+        public IActionResult StudentManagement(int pageIndex = 0)
         {
-            return View();
+            var totalStudents = _context.Students.Count();
+            var students = _context.Students
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+            ViewBag.HasPreviousPage = pageIndex > 0;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalStudents;
+            ViewBag.PageIndex = pageIndex;
+
+            return View(students);
         }
 
         [HttpPost]
-        public IActionResult StudentManagement(string sno, string sname, string gender, int? age, string tel, int? u_id, int? m_id, int? @class, int? d_id, int? r_id)
+        public IActionResult StudentManagement(string sno, string sname, string gender, int? age, string tel, int? u_id, int? m_id, int? @class, int? d_id, int? r_id, int pageIndex = 0)
         {
             var query = _context.Students.AsQueryable();
 
@@ -89,17 +117,36 @@ namespace dms.Controllers
             if (r_id.HasValue)
                 query = query.Where(s => s.RId == r_id.Value);
 
-            var students = query.ToList();
+            var totalStudents = query.Count();
+            var students = query
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+            ViewBag.HasPreviousPage = pageIndex > 0;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalStudents;
+            ViewBag.PageIndex = pageIndex;
+
             return View(students);
         }
 
-        public IActionResult EntryRegistration()
+        public IActionResult EntryRegistration(int pageIndex = 0)
         {
-            return View();
+            var totalInOuts = _context.InOuts.Count();
+            var inOuts = _context.InOuts
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+            ViewBag.HasPreviousPage = pageIndex > 0;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalInOuts;
+            ViewBag.PageIndex = pageIndex;
+
+            return View(inOuts);
         }
 
         [HttpPost]
-        public IActionResult EntryRegistration(int? d_id, int? s_id, DateTime? out_date, DateTime? in_date)
+        public IActionResult EntryRegistration(int? d_id, int? s_id, DateTime? out_date, DateTime? in_date, int pageIndex = 0)
         {
             var query = _context.InOuts.AsQueryable();
 
@@ -115,16 +162,36 @@ namespace dms.Controllers
             if (in_date.HasValue)
                 query = query.Where(io => io.InDate <= in_date.Value);
 
-            var inOutRecords = query.ToList();
+            var totalInOuts = query.Count();
+            var inOutRecords = query
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+            ViewBag.HasPreviousPage = pageIndex > 0;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalInOuts;
+            ViewBag.PageIndex = pageIndex;
+
             return View(inOutRecords);
         }
-        public IActionResult VisitorRegistration()
+
+        public IActionResult VisitorRegistration(int pageIndex = 0)
         {
-            return View();
+            var totalVisits = _context.Visits.Count();
+            var visits = _context.Visits
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+            ViewBag.HasPreviousPage = pageIndex > 0;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalVisits;
+            ViewBag.PageIndex = pageIndex;
+
+            return View(visits);
         }
 
         [HttpPost]
-        public IActionResult VisitorRegistration(int? d_id, int? s_id, string name, DateTime? in_date, DateTime? out_date)
+        public IActionResult VisitorRegistration(int? d_id, int? s_id, string name, DateTime? in_date, DateTime? out_date, int pageIndex = 0)
         {
             var query = _context.Visits.AsQueryable();
 
@@ -143,17 +210,37 @@ namespace dms.Controllers
             if (out_date.HasValue)
                 query = query.Where(v => v.OutDate <= out_date.Value);
 
-            var visitRecords = query.ToList();
+            var totalVisits = query.Count();
+            var visitRecords = query
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+            ViewBag.HasPreviousPage = pageIndex > 0;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalVisits;
+            ViewBag.PageIndex = pageIndex;
+
             return View(visitRecords);
         }
-        public IActionResult Notifications()
+
+        public IActionResult Notifications(int pageIndex = 0)
         {
-            var notifications = _context.Notifications.ToList();
+            var totalNotifications = _context.Notifications.Count();
+            var notifications = _context.Notifications
+                .OrderByDescending(n => n.CreatedAt)
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+            ViewBag.HasPreviousPage = pageIndex > 0;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalNotifications;
+            ViewBag.PageIndex = pageIndex;
+
             return View(notifications);
         }
 
         [HttpPost]
-        public IActionResult Notifications(string title, string content)
+        public IActionResult Notifications(string title, string content, int pageIndex = 0)
         {
             if (!string.IsNullOrEmpty(title) && !string.IsNullOrEmpty(content))
             {
@@ -168,7 +255,17 @@ namespace dms.Controllers
                 _context.SaveChanges();
             }
 
-            var notifications = _context.Notifications.ToList();
+            var totalNotifications = _context.Notifications.Count();
+            var notifications = _context.Notifications
+                .OrderByDescending(n => n.CreatedAt)
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+            ViewBag.HasPreviousPage = pageIndex > 0;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalNotifications;
+            ViewBag.PageIndex = pageIndex;
+
             return View(notifications);
         }
     }
