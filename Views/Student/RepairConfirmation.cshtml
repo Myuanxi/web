@@ -1,0 +1,54 @@
+﻿@{
+    ViewData["Title"] = "报修提交确认";
+}
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>报修提交确认</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+
+        h2 {
+            color: #4CAF50;
+        }
+
+        .back-button {
+            margin-top: 20px;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            padding: 10px 20px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>@ViewBag.Message</h2>
+        <a href="@Url.Action("Index", "Student")" class="back-button">返回首页</a>
+    </div>
+</body>
+</html>

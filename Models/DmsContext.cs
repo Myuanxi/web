@@ -16,5 +16,6 @@ namespace dms.Models
         public DbSet<InOut> InOuts { get; set; }
         public DbSet<Visit> Visits { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Repair> Repairs { get; set; }
     }
 }

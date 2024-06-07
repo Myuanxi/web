@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using dms.Models;
 using System.Linq;
+using System.Security.Claims;
 
 namespace dms.Controllers
 {
@@ -33,6 +34,35 @@ namespace dms.Controllers
             ViewBag.PageIndex = pageIndex;
 
             return View(notifications);
+        }
+
+        public IActionResult Repair()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult SubmitRepair(string address, string description, string category)
+        {
+            var studentName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value; // 获取当前登录用户的姓名
+            var studentNo = User.Claims.FirstOrDefault(c => c.Type == "StudentNo")?.Value; // 获取当前登录用户的学号
+
+            var repair = new Repair
+            {
+                StudentName = studentName,
+                StudentNo = studentNo,
+                Address = address,
+                Description = description,
+                Category = category,
+                SubmitTime = DateTime.Now,
+                Status = "未开始"
+            };
+
+            _context.Repairs.Add(repair);
+            _context.SaveChanges();
+
+            ViewBag.Message = "报修提交成功！";
+            return View("RepairConfirmation");
         }
     }
 }

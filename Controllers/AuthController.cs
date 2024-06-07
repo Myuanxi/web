@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 using dms.Models;
-using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace dms.Controllers
 {
@@ -20,10 +23,10 @@ namespace dms.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login(string username, string password)
+        public async Task<IActionResult> Login(string username, string password)
         {
             // 查询管理员表
-            var admin = _context.Admins.FirstOrDefault(a => a.Aname == username); // 这里修改为 a.Aname
+            var admin = _context.Admins.FirstOrDefault(a => a.Aname == username);
             if (admin != null && admin.Password == password)
             {
                 // 管理员登录成功
@@ -35,6 +38,16 @@ namespace dms.Controllers
             if (student != null && student.Password == password)
             {
                 // 学生登录成功
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, student.Sname),
+                    new Claim("StudentNo", student.Sno)
+                    // 你可以添加更多的 Claims 根据需要
+                };
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
+
                 return RedirectToAction("Index", "Student");
             }
 
@@ -42,6 +55,5 @@ namespace dms.Controllers
             ViewBag.ErrorMessage = "用户名或密码错误，请重新输入。";
             return View();
         }
-
     }
 }
