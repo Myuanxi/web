@@ -64,5 +64,28 @@ namespace dms.Controllers
             ViewBag.Message = "报修提交成功！";
             return View("RepairConfirmation");
         }
+        public IActionResult RepairHistory(int pageIndex = 0)
+        {
+            var studentNo = User.Claims.FirstOrDefault(c => c.Type == "StudentNo")?.Value;
+            if (string.IsNullOrEmpty(studentNo))
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            const int PageSize = 10;
+            var totalRepairs = _context.Repairs.Count(r => r.StudentNo == studentNo);
+            var repairs = _context.Repairs
+                .Where(r => r.StudentNo == studentNo)
+                .OrderByDescending(r => r.SubmitTime)
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+            ViewBag.HasPreviousPage = pageIndex > 0;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalRepairs;
+            ViewBag.PageIndex = pageIndex;
+
+            return View(repairs);
+        }
     }
 }

@@ -60,15 +60,25 @@
             margin-top: 10px;
         }
 
-        .back-button {
+        .button-container {
             margin-top: 20px;
-            background-color: #6c757d;
+            text-align: center;
+        }
+
+        .button {
+            background-color: #007BFF;
             color: white;
             border-radius: 4px;
             cursor: pointer;
             text-decoration: none;
             padding: 10px 20px;
             border: none;
+            display: inline-block;
+            margin: 0 10px;
+        }
+
+        .history-button {
+            background-color: #6c757d;
         }
     </style>
 </head>
@@ -94,7 +104,10 @@
 
             <button type="submit">提交</button>
         </form>
-        <a href="@Url.Action("Index", "Student")" class="back-button">返回首页</a>
+        <div class="button-container">
+            <a href="@Url.Action("Index", "Student")" class="button">返回首页</a>
+            <a href="@Url.Action("RepairHistory", "Student")" class="button history-button">历史报修</a>
+        </div>
     </div>
 </body>
 </html>
