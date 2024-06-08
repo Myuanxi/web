@@ -17,5 +17,7 @@ namespace dms.Models
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Repair> Repairs { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<Reservation> Reservations { get; set; }
+
     }
 }

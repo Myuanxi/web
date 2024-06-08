@@ -213,5 +213,69 @@ namespace dms.Controllers
 
             return View(repairs);
         }
+        // 预约场馆视图
+        public IActionResult Reservations()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult MakeReservation(string venue, DateTime reservationTime)
+        {
+            var studentNo = User.Claims.FirstOrDefault(c => c.Type == "StudentNo")?.Value;
+            if (string.IsNullOrEmpty(studentNo))
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var student = _context.Students.FirstOrDefault(s => s.Sno == studentNo);
+            if (student == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var reservation = new Reservation
+            {
+                StudentId = student.Id,
+                Venue = venue,
+                ReservationTime = reservationTime,
+                CreatedAt = DateTime.Now
+            };
+
+            _context.Reservations.Add(reservation);
+            _context.SaveChanges();
+
+            return RedirectToAction("ReservationHistory");
+        }
+
+        public IActionResult ReservationHistory(int pageIndex = 0)
+        {
+            var studentNo = User.Claims.FirstOrDefault(c => c.Type == "StudentNo")?.Value;
+            if (string.IsNullOrEmpty(studentNo))
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var student = _context.Students.FirstOrDefault(s => s.Sno == studentNo);
+            if (student == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var totalReservations = _context.Reservations.Count(r => r.StudentId == student.Id);
+            var reservations = _context.Reservations
+                .Where(r => r.StudentId == student.Id)
+                .OrderByDescending(r => r.CreatedAt)
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+            ViewBag.HasPreviousPage = pageIndex > 0;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalReservations;
+            ViewBag.PageIndex = pageIndex;
+
+            return View(reservations);
+        }
     }
 }
+

@@ -1,0 +1,82 @@
+﻿@{
+    ViewData["Title"] = "场馆预约";
+}
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #f9f9f9;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        label {
+            margin-bottom: 5px;
+        }
+
+        select, input[type="datetime-local"] {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>@ViewData["Title"]</h2>
+        <form asp-action="MakeReservation" method="post">
+            <label for="venue">场馆：</label>
+            <select id="venue" name="venue" required>
+                <option value="篮球场">篮球场</option>
+                <option value="羽毛球场">羽毛球场</option>
+                <option value="图书馆">图书馆</option>
+            </select>
+
+            <label for="reservationTime">预约时间：</label>
+            <input type="datetime-local" id="reservationTime" name="reservationTime" required min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm")" max="@DateTime.Now.AddDays(7).ToString("yyyy-MM-ddTHH:mm")" />
+
+            <button type="submit">提交预约</button>
+        </form>
+    </div>
+</body>
+</html>
