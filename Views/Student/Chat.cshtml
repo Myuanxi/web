@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<dms.Models.ChatMessage>
 
 @{
-    ViewData["Title"] = "实时聊天";
+    ViewData["Title"] = "与宿管的实时聊天";
 }
 
 <!DOCTYPE html>
@@ -64,6 +64,16 @@
             border-radius: 4px;
             cursor: pointer;
         }
+
+        .pagination {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+            .pagination button {
+                margin: 0 5px;
+                padding: 5px 10px;
+            }
     </style>
 </head>
 <body>
@@ -79,6 +89,10 @@
                 </div>
             }
         </div>
+        <div class="pagination">
+            <button onclick="loadPreviousPage()">上一页</button>
+            <button onclick="loadNextPage()">下一页</button>
+        </div>
         <div class="input-container">
             <input type="text" id="messageInput" placeholder="输入消息..." />
             <button onclick="sendMessage()">发送</button>
@@ -86,28 +100,59 @@
     </div>
 
     <script>
+        var pageIndex = 0;
+
+        function loadMessages() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '@Url.Action("GetChatMessages", "Student")?pageIndex=' + pageIndex, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var messages = JSON.parse(xhr.responseText);
+                    var messageContainer = document.getElementById('messageContainer');
+                    messageContainer.innerHTML = '';
+                    messages.forEach(function (message) {
+                        var newMessage = document.createElement('div');
+                        newMessage.className = 'message';
+                        newMessage.innerHTML = '<strong>' + message.senderId + ':</strong> ' + message.message + '<br /><small>' + message.timestamp + '</small>';
+                        messageContainer.appendChild(newMessage);
+                    });
+                    messageContainer.scrollTop = messageContainer.scrollHeight;
+                }
+            };
+            xhr.send();
+        }
+
+        function loadPreviousPage() {
+            if (pageIndex > 0) {
+                pageIndex--;
+                loadMessages();
+            }
+        }
+
+        function loadNextPage() {
+            pageIndex++;
+            loadMessages();
+        }
+
         function sendMessage() {
             var messageInput = document.getElementById('messageInput');
             var message = messageInput.value;
             if (message.trim() !== '') {
-                // 发送消息到服务器
                 var xhr = new XMLHttpRequest();
                 xhr.open('POST', '@Url.Action("SendMessage", "Student")', true);
                 xhr.setRequestHeader('Content-Type', 'application/json');
                 xhr.onreadystatechange = function () {
                     if (xhr.readyState === 4 && xhr.status === 200) {
-                        // 更新消息列表
-                        var messageContainer = document.getElementById('messageContainer');
-                        var newMessage = document.createElement('div');
-                        newMessage.className = 'message';
-                        newMessage.innerHTML = '<strong>你:</strong> ' + message + '<br /><small>刚刚</small>';
-                        messageContainer.appendChild(newMessage);
+                        loadMessages();
                         messageInput.value = '';
                     }
                 };
                 xhr.send(JSON.stringify({ message: message }));
             }
         }
+
+        // Load initial messages
+        loadMessages();
     </script>
 </body>
 </html>

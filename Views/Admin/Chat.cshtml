@@ -1,11 +1,15 @@
 ﻿@model IEnumerable<dms.Models.ChatMessage>
 
+@{
+    ViewData["Title"] = "与学生的实时聊天";
+}
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>与学生的实时聊天</title>
+    <title>@ViewData["Title"]</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -61,34 +65,44 @@
             cursor: pointer;
         }
 
-        select {
-            margin-bottom: 10px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            width: 100%;
+        .pagination {
+            text-align: center;
+            margin-top: 10px;
         }
+
+            .pagination button {
+                margin: 0 5px;
+                padding: 5px 10px;
+            }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>联系学生</h2>
-
-        <form id="studentSelectForm">
-            <label for="studentSelect">选择学生：</label>
-            <select id="studentSelect" name="studentId" onchange="loadChatMessages()">
-                <option value="">-- 请选择学生 --</option>
+        <h2>@ViewData["Title"]</h2>
+        <div>
+            <label for="studentSelect">选择学生:</label>
+            <select id="studentSelect" onchange="loadChat()">
+                <option value="">请选择学生</option>
                 @foreach (var student in ViewBag.Students)
                 {
-                    <option value="@student.Id">@student.Sname (@student.Sno)</option>
+                    <option value="@student.Id">@student.Sname</option>
                 }
             </select>
-        </form>
-
-        <div class="messages" id="messageContainer">
-            <!-- 聊天记录 -->
         </div>
-
+        <div class="messages" id="messageContainer">
+            @foreach (var message in Model)
+            {
+                <div class="message">
+                    <strong>@message.SenderId:</strong> @message.Message
+                    <br />
+                    <small>@message.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</small>
+                </div>
+            }
+        </div>
+        <div class="pagination">
+            <button onclick="loadPreviousPage()">上一页</button>
+            <button onclick="loadNextPage()">下一页</button>
+        </div>
         <div class="input-container">
             <input type="text" id="messageInput" placeholder="输入消息..." />
             <button onclick="sendMessage()">发送</button>
@@ -96,46 +110,65 @@
     </div>
 
     <script>
-        function loadChatMessages() {
-            var studentId = document.getElementById('studentSelect').value;
-            if (studentId) {
-                fetch('@Url.Action("GetChatMessages", "Admin")?studentId=' + studentId)
-                    .then(response => response.json())
-                    .then(data => {
-                        var messageContainer = document.getElementById('messageContainer');
-                        messageContainer.innerHTML = '';
-                        data.forEach(message => {
-                            var newMessage = document.createElement('div');
-                            newMessage.className = 'message';
-                            newMessage.innerHTML = '<strong>' + message.senderName + ':</strong> ' + message.message + '<br /><small>' + new Date(message.timestamp).toLocaleString() + '</small>';
-                            messageContainer.appendChild(newMessage);
-                        });
-                    });
+        var pageIndex = 0;
+        var selectedStudentId = null;
+
+        function loadChat() {
+            selectedStudentId = document.getElementById('studentSelect').value;
+            if (selectedStudentId) {
+                pageIndex = 0;
+                loadMessages();
             }
         }
 
+        function loadMessages() {
+            if (selectedStudentId) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', '@Url.Action("GetChatMessages", "Admin")?studentId=' + selectedStudentId + '&pageIndex=' + pageIndex, true);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        var messages = JSON.parse(xhr.responseText);
+                        var messageContainer = document.getElementById('messageContainer');
+                        messageContainer.innerHTML = '';
+                        messages.forEach(function (message) {
+                            var newMessage = document.createElement('div');
+                            newMessage.className = 'message';
+                            newMessage.innerHTML = '<strong>' + message.senderId + ':</strong> ' + message.message + '<br /><small>' + message.timestamp + '</small>';
+                            messageContainer.appendChild(newMessage);
+                        });
+                        messageContainer.scrollTop = messageContainer.scrollHeight;
+                    }
+                };
+                xhr.send();
+            }
+        }
+
+        function loadPreviousPage() {
+            if (pageIndex > 0) {
+                pageIndex--;
+                loadMessages();
+            }
+        }
+
+        function loadNextPage() {
+            pageIndex++;
+            loadMessages();
+        }
+
         function sendMessage() {
-            var studentId = document.getElementById('studentSelect').value;
             var messageInput = document.getElementById('messageInput');
             var message = messageInput.value;
-
-            if (studentId && message.trim() !== '') {
-                fetch('@Url.Action("SendMessage", "Admin")', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ ReceiverId: studentId, Message: message })
-                }).then(response => {
-                    if (response.ok) {
-                        var messageContainer = document.getElementById('messageContainer');
-                        var newMessage = document.createElement('div');
-                        newMessage.className = 'message';
-                        newMessage.innerHTML = '<strong>你:</strong> ' + message + '<br /><small>刚刚</small>';
-                        messageContainer.appendChild(newMessage);
+            if (message.trim() !== '' && selectedStudentId) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '@Url.Action("SendMessage", "Admin")', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        loadMessages();
                         messageInput.value = '';
                     }
-                });
+                };
+                xhr.send(JSON.stringify({ message: message, receiverId: selectedStudentId }));
             }
         }
     </script>

@@ -2,13 +2,14 @@
 using dms.Models;
 using System.Linq;
 using System.Security.Claims;
+using System.Collections.Generic;
 
 namespace dms.Controllers
 {
     public class StudentController : Controller
     {
         private readonly DmsContext _context;
-        private const int PageSize = 10; // 每页显示的通知数
+        private const int PageSize = 10; // 每页显示的消息数
 
         public StudentController(DmsContext context)
         {
@@ -66,12 +67,50 @@ namespace dms.Controllers
                 .Where(cm => (cm.SenderId == student.Id && cm.ReceiverId == admin.Id) ||
                              (cm.SenderId == admin.Id && cm.ReceiverId == student.Id))
                 .OrderBy(cm => cm.Timestamp)
+                .Take(PageSize)
                 .ToList();
 
             ViewBag.AdminId = admin.Id;
             ViewBag.StudentId = student.Id;
 
             return View(chatMessages);
+        }
+
+        public IActionResult GetChatMessages(int pageIndex)
+        {
+            var studentNo = User.Claims.FirstOrDefault(c => c.Type == "StudentNo")?.Value;
+            if (string.IsNullOrEmpty(studentNo))
+            {
+                return BadRequest("未登录");
+            }
+
+            var student = _context.Students.FirstOrDefault(s => s.Sno == studentNo);
+            if (student == null)
+            {
+                return BadRequest("用户不存在");
+            }
+
+            var dormitory = _context.Dormitories.FirstOrDefault(d => d.Id == student.DId);
+            if (dormitory == null)
+            {
+                return BadRequest("宿舍不存在");
+            }
+
+            var admin = _context.Admins.FirstOrDefault(a => a.Id == dormitory.AId);
+            if (admin == null)
+            {
+                return BadRequest("管理员不存在");
+            }
+
+            var chatMessages = _context.ChatMessages
+                .Where(cm => (cm.SenderId == student.Id && cm.ReceiverId == admin.Id) ||
+                             (cm.SenderId == admin.Id && cm.ReceiverId == student.Id))
+                .OrderBy(cm => cm.Timestamp)
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+            return Json(chatMessages);
         }
 
         [HttpPost]
@@ -116,5 +155,7 @@ namespace dms.Controllers
         }
     }
 
-
 }
+
+
+

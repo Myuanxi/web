@@ -2,12 +2,16 @@
 using dms.Models;
 using System.Linq;
 using System.Security.Claims;
+using System.Collections.Generic;
+using System;
+using Microsoft.EntityFrameworkCore;
 
 namespace dms.Controllers
 {
     public class AdminController : Controller
     {
         private readonly DmsContext _context;
+        private const int PageSize = 10; // 每页显示的消息数
 
         public AdminController(DmsContext context)
         {
@@ -22,12 +26,17 @@ namespace dms.Controllers
 
         public IActionResult DormitoryManagement()
         {
+            ViewBag.HasPreviousPage = false; // 添加默认值
+            ViewBag.HasNextPage = false; // 添加默认值
             return View();
         }
 
         [HttpPost]
         public IActionResult DormitoryManagement(int? buildingNumber, int? dormNumber)
         {
+            ViewBag.HasPreviousPage = false; // 添加默认值
+            ViewBag.HasNextPage = false; // 添加默认值
+
             if (buildingNumber.HasValue && dormNumber.HasValue)
             {
                 List<Room> rooms;
@@ -47,13 +56,24 @@ namespace dms.Controllers
             return View();
         }
 
-        public IActionResult StudentManagement()
+        public IActionResult StudentManagement(int pageIndex = 0)
         {
-            return View();
+            var totalStudents = _context.Students.Count();
+            var students = _context.Students
+                .OrderBy(s => s.Id)
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+            ViewBag.HasPreviousPage = pageIndex > 0;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalStudents;
+            ViewBag.PageIndex = pageIndex;
+
+            return View(students);
         }
 
         [HttpPost]
-        public IActionResult StudentManagement(string sno, string sname, string gender, int? age, string tel, int? u_id, int? m_id, int? @class, int? d_id, int? r_id)
+        public IActionResult StudentManagement(string sno, string sname, string gender, int? age, string tel, int? u_id, int? m_id, int? @class, int? d_id, int? r_id, int pageIndex = 0)
         {
             var query = _context.Students.AsQueryable();
 
@@ -87,18 +107,33 @@ namespace dms.Controllers
             if (r_id.HasValue)
                 query = query.Where(s => s.RId == r_id.Value);
 
-            var students = query.ToList();
+            var totalStudents = query.Count();
+            var students = query
+                .OrderBy(s => s.Id)
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+            ViewBag.HasPreviousPage = pageIndex > 0;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalStudents;
+            ViewBag.PageIndex = pageIndex;
+
             return View(students);
         }
 
         public IActionResult EntryRegistration()
         {
+            ViewBag.HasPreviousPage = false; // 添加默认值
+            ViewBag.HasNextPage = false; // 添加默认值
             return View();
         }
 
         [HttpPost]
         public IActionResult EntryRegistration(int? d_id, int? s_id, DateTime? out_date, DateTime? in_date)
         {
+            ViewBag.HasPreviousPage = false; // 添加默认值
+            ViewBag.HasNextPage = false; // 添加默认值
+
             var query = _context.InOuts.AsQueryable();
 
             if (d_id.HasValue)
@@ -119,12 +154,17 @@ namespace dms.Controllers
 
         public IActionResult VisitorRegistration()
         {
+            ViewBag.HasPreviousPage = false; // 添加默认值
+            ViewBag.HasNextPage = false; // 添加默认值
             return View();
         }
 
         [HttpPost]
         public IActionResult VisitorRegistration(int? d_id, int? s_id, string name, DateTime? in_date, DateTime? out_date)
         {
+            ViewBag.HasPreviousPage = false; // 添加默认值
+            ViewBag.HasNextPage = false; // 添加默认值
+
             var query = _context.Visits.AsQueryable();
 
             if (d_id.HasValue)
@@ -146,9 +186,19 @@ namespace dms.Controllers
             return View(visitRecords);
         }
 
-        public IActionResult Notifications()
+        public IActionResult Notifications(int pageIndex = 0)
         {
-            var notifications = _context.Notifications.ToList();
+            var totalNotifications = _context.Notifications.Count();
+            var notifications = _context.Notifications
+                .OrderByDescending(n => n.CreatedAt)
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+            ViewBag.HasPreviousPage = pageIndex > 0;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalNotifications;
+            ViewBag.PageIndex = pageIndex;
+
             return View(notifications);
         }
 
@@ -168,50 +218,54 @@ namespace dms.Controllers
                 _context.SaveChanges();
             }
 
-            var notifications = _context.Notifications.ToList();
-            return View(notifications);
+            return RedirectToAction("Notifications");
         }
 
         public IActionResult Chat()
         {
+            var adminId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (adminId == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
             var students = _context.Students.ToList();
             ViewBag.Students = students;
 
             return View(new List<ChatMessage>());
         }
 
-        [HttpGet]
-        public IActionResult GetChatMessages(int studentId)
+        public IActionResult GetChatMessages(int studentId, int pageIndex)
         {
-            var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var adminId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (adminId == null)
+            {
+                return BadRequest("未登录");
+            }
+
             var chatMessages = _context.ChatMessages
-                .Where(cm => (cm.SenderId == studentId && cm.ReceiverId == adminId) ||
-                             (cm.SenderId == adminId && cm.ReceiverId == studentId))
+                .Where(cm => (cm.SenderId == studentId && cm.ReceiverId == int.Parse(adminId)) ||
+                             (cm.SenderId == int.Parse(adminId) && cm.ReceiverId == studentId))
                 .OrderBy(cm => cm.Timestamp)
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
                 .ToList();
 
-            var messages = chatMessages.Select(cm => new
-            {
-                senderName = cm.SenderId == adminId ? "你" : _context.Students.Find(cm.SenderId)?.Sname,
-                message = cm.Message,
-                timestamp = cm.Timestamp
-            });
-
-            return Json(messages);
+            return Json(chatMessages);
         }
 
         [HttpPost]
         public IActionResult SendMessage([FromBody] ChatMessageModel messageModel)
         {
-            var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            if (adminId == 0)
+            var adminId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (adminId == null)
             {
                 return BadRequest("未登录");
             }
 
             var chatMessage = new ChatMessage
             {
-                SenderId = adminId,
+                SenderId = int.Parse(adminId),
                 ReceiverId = messageModel.ReceiverId,
                 Message = messageModel.Message,
                 Timestamp = DateTime.Now
@@ -230,4 +284,3 @@ namespace dms.Controllers
         public string Message { get; set; }
     }
 }
-
