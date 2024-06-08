@@ -13,15 +13,19 @@ builder.Services.AddDbContext<DmsContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
                      new MySqlServerVersion(new Version(8, 0, 28))));
 
-// 配置身份验证
+// 使用工厂方法注册 ChatWebSocketHandler
+builder.Services.AddScoped<ChatWebSocketHandler>(provider =>
+{
+    var context = provider.GetRequiredService<DmsContext>();
+    return new ChatWebSocketHandler(context);
+});
+
+// 添加身份验证和 Cookie 认证
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/Auth/Login";
-        options.LogoutPath = "/Auth/Logout";
     });
-
-builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -37,8 +41,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseAuthentication(); // 添加这一行来启用身份验证
+app.UseAuthorization(); // 确保启用授权
 
 // 将默认控制器设置为 AuthController
 app.MapControllerRoute(

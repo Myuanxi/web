@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using dms.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace dms.Controllers
 {
@@ -26,23 +26,30 @@ namespace dms.Controllers
         public async Task<IActionResult> Login(string username, string password)
         {
             // 查询管理员表
-            var admin = _context.Admins.FirstOrDefault(a => a.Aname == username);
+            var admin = await _context.Admins.FirstOrDefaultAsync(a => a.Aname == username);
             if (admin != null && admin.Password == password)
             {
-                // 管理员登录成功
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, admin.Aname),
+                    new Claim(ClaimTypes.Role, "Admin")
+                };
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
+
                 return RedirectToAction("Index", "Admin");
             }
 
             // 查询学生表
-            var student = _context.Students.FirstOrDefault(s => s.Sno == username);
+            var student = await _context.Students.FirstOrDefaultAsync(s => s.Sno == username);
             if (student != null && student.Password == password)
             {
-                // 学生登录成功
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, student.Sname),
-                    new Claim("StudentNo", student.Sno)
-                    // 你可以添加更多的 Claims 根据需要
+                    new Claim("StudentNo", student.Sno),
+                    new Claim(ClaimTypes.Role, "Student")
                 };
 
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -54,6 +61,12 @@ namespace dms.Controllers
             // 登录失败，返回登录页面
             ViewBag.ErrorMessage = "用户名或密码错误，请重新输入。";
             return View();
+        }
+
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login", "Auth");
         }
     }
 }

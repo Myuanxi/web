@@ -1,16 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using dms.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
 using System.Linq;
+using System;
+using System.Security.Claims;
 
 namespace dms.Controllers
 {
     public class AdminController : Controller
     {
         private readonly DmsContext _context;
-        private const int PageSize = 10; // 每页显示的项目数
+        private const int PageSize = 10; // 每页显示的记录数
 
         public AdminController(DmsContext context)
         {
@@ -26,6 +26,7 @@ namespace dms.Controllers
         {
             var totalRooms = _context.Rooms.Count();
             var rooms = _context.Rooms
+                .OrderBy(r => r.Id)
                 .Skip(pageIndex * PageSize)
                 .Take(PageSize)
                 .ToList();
@@ -42,26 +43,25 @@ namespace dms.Controllers
         {
             if (buildingNumber.HasValue && dormNumber.HasValue)
             {
-                List<Room> rooms;
-                try
-                {
-                    rooms = _context.Rooms
-                        .Where(r => r.DId == buildingNumber.Value && r.Num == dormNumber.Value)
-                        .Skip(pageIndex * PageSize)
-                        .Take(PageSize)
-                        .ToList();
+                var query = _context.Rooms.AsQueryable();
 
-                    var totalRooms = _context.Rooms.Count(r => r.DId == buildingNumber.Value && r.Num == dormNumber.Value);
-                    ViewBag.HasPreviousPage = pageIndex > 0;
-                    ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalRooms;
-                    ViewBag.PageIndex = pageIndex;
-                }
-                catch (Exception ex)
-                {
-                    // 处理异常并记录日志
-                    // Log the exception (ex)
-                    return View(); // 返回一个错误视图或者显示错误信息
-                }
+                if (buildingNumber.HasValue)
+                    query = query.Where(r => r.DId == buildingNumber.Value);
+
+                if (dormNumber.HasValue)
+                    query = query.Where(r => r.Num == dormNumber.Value);
+
+                var totalRooms = query.Count();
+                var rooms = query
+                    .OrderBy(r => r.Id)
+                    .Skip(pageIndex * PageSize)
+                    .Take(PageSize)
+                    .ToList();
+
+                ViewBag.HasPreviousPage = pageIndex > 0;
+                ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalRooms;
+                ViewBag.PageIndex = pageIndex;
+
                 return View(rooms);
             }
             return View();
@@ -71,6 +71,7 @@ namespace dms.Controllers
         {
             var totalStudents = _context.Students.Count();
             var students = _context.Students
+                .OrderBy(s => s.Id)
                 .Skip(pageIndex * PageSize)
                 .Take(PageSize)
                 .ToList();
@@ -119,6 +120,7 @@ namespace dms.Controllers
 
             var totalStudents = query.Count();
             var students = query
+                .OrderBy(s => s.Id)
                 .Skip(pageIndex * PageSize)
                 .Take(PageSize)
                 .ToList();
@@ -132,17 +134,18 @@ namespace dms.Controllers
 
         public IActionResult EntryRegistration(int pageIndex = 0)
         {
-            var totalInOuts = _context.InOuts.Count();
-            var inOuts = _context.InOuts
+            var totalEntries = _context.InOuts.Count();
+            var entries = _context.InOuts
+                .OrderBy(io => io.Id)
                 .Skip(pageIndex * PageSize)
                 .Take(PageSize)
                 .ToList();
 
             ViewBag.HasPreviousPage = pageIndex > 0;
-            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalInOuts;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalEntries;
             ViewBag.PageIndex = pageIndex;
 
-            return View(inOuts);
+            return View(entries);
         }
 
         [HttpPost]
@@ -162,23 +165,25 @@ namespace dms.Controllers
             if (in_date.HasValue)
                 query = query.Where(io => io.InDate <= in_date.Value);
 
-            var totalInOuts = query.Count();
-            var inOutRecords = query
+            var totalEntries = query.Count();
+            var entries = query
+                .OrderBy(io => io.Id)
                 .Skip(pageIndex * PageSize)
                 .Take(PageSize)
                 .ToList();
 
             ViewBag.HasPreviousPage = pageIndex > 0;
-            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalInOuts;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalEntries;
             ViewBag.PageIndex = pageIndex;
 
-            return View(inOutRecords);
+            return View(entries);
         }
 
         public IActionResult VisitorRegistration(int pageIndex = 0)
         {
             var totalVisits = _context.Visits.Count();
             var visits = _context.Visits
+                .OrderBy(v => v.Id)
                 .Skip(pageIndex * PageSize)
                 .Take(PageSize)
                 .ToList();
@@ -211,7 +216,8 @@ namespace dms.Controllers
                 query = query.Where(v => v.OutDate <= out_date.Value);
 
             var totalVisits = query.Count();
-            var visitRecords = query
+            var visits = query
+                .OrderBy(v => v.Id)
                 .Skip(pageIndex * PageSize)
                 .Take(PageSize)
                 .ToList();
@@ -220,7 +226,7 @@ namespace dms.Controllers
             ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalVisits;
             ViewBag.PageIndex = pageIndex;
 
-            return View(visitRecords);
+            return View(visits);
         }
 
         public IActionResult Notifications(int pageIndex = 0)
@@ -268,5 +274,53 @@ namespace dms.Controllers
 
             return View(notifications);
         }
+
+        public IActionResult Chat()
+        {        
+            var adminId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(adminId))
+                {
+                    return RedirectToAction("Login", "Auth");
+                }
+
+            var admin = _context.Admins.FirstOrDefault(a => a.Id == int.Parse(adminId));
+            if (admin == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var chatMessages = _context.ChatMessages
+                .Where(cm => cm.ReceiverId == admin.Id || cm.SenderId == admin.Id)
+                .OrderBy(cm => cm.Timestamp)
+                .ToList();
+
+            ViewBag.AdminId = admin.Id;
+
+            return View(chatMessages);
+        }
+
+        [HttpPost]
+        public IActionResult SubmitChatMessage(int receiverId, string message)
+        {
+            var adminId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(adminId))
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var chatMessage = new ChatMessage
+            {
+                SenderId = int.Parse(adminId),
+                ReceiverId = receiverId,
+                Message = message,
+                Timestamp = DateTime.Now
+            };
+
+            _context.ChatMessages.Add(chatMessage);
+            _context.SaveChanges();
+
+            return RedirectToAction("Chat");
+        }
     }
 }
+

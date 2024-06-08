@@ -36,9 +36,42 @@ namespace dms.Controllers
             return View(notifications);
         }
 
-        public IActionResult Repair()
+        public IActionResult Chat()
         {
-            return View();
+            var studentNo = User.Claims.FirstOrDefault(c => c.Type == "StudentNo")?.Value;
+            if (string.IsNullOrEmpty(studentNo))
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var student = _context.Students.FirstOrDefault(s => s.Sno == studentNo);
+            if (student == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var dormitory = _context.Dormitories.FirstOrDefault(d => d.Id == student.DId); // 这里引用 DbSet<Dormitory>
+            if (dormitory == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            var admin = _context.Admins.FirstOrDefault(a => a.Id == dormitory.AId); // 使用 AId 列
+            if (admin == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            var chatMessages = _context.ChatMessages
+                .Where(cm => (cm.SenderId == student.Id && cm.ReceiverId == admin.Id) ||
+                             (cm.SenderId == admin.Id && cm.ReceiverId == student.Id))
+                .OrderBy(cm => cm.Timestamp)
+                .ToList();
+
+            ViewBag.AdminId = admin.Id;
+            ViewBag.StudentId = student.Id;
+
+            return View(chatMessages);
         }
 
         [HttpPost]
@@ -62,8 +95,10 @@ namespace dms.Controllers
             _context.SaveChanges();
 
             ViewBag.Message = "报修提交成功！";
+
             return View("RepairConfirmation");
         }
+
         public IActionResult RepairHistory(int pageIndex = 0)
         {
             var studentNo = User.Claims.FirstOrDefault(c => c.Type == "StudentNo")?.Value;
@@ -72,7 +107,12 @@ namespace dms.Controllers
                 return RedirectToAction("Login", "Auth");
             }
 
-            const int PageSize = 10;
+            var student = _context.Students.FirstOrDefault(s => s.Sno == studentNo);
+            if (student == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
             var totalRepairs = _context.Repairs.Count(r => r.StudentNo == studentNo);
             var repairs = _context.Repairs
                 .Where(r => r.StudentNo == studentNo)
