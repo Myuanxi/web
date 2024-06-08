@@ -3,6 +3,7 @@ using dms.Models;
 using System.Linq;
 using System.Security.Claims;
 using System.Collections.Generic;
+using System;
 
 namespace dms.Controllers
 {
@@ -153,9 +154,64 @@ namespace dms.Controllers
 
             return Ok();
         }
+
+        public IActionResult Repair()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult SubmitRepair(string address, string description, string category)
+        {
+            var studentName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value; // 获取当前登录用户的姓名
+            var studentNo = User.Claims.FirstOrDefault(c => c.Type == "StudentNo")?.Value; // 获取当前登录用户的学号
+
+            var repair = new Repair
+            {
+                StudentName = studentName,
+                StudentNo = studentNo,
+                Address = address,
+                Description = description,
+                Category = category,
+                SubmitTime = DateTime.Now,
+                Status = "未开始"
+            };
+
+            _context.Repairs.Add(repair);
+            _context.SaveChanges();
+
+            ViewBag.Message = "报修提交成功！";
+
+            return View("RepairConfirmation");
+        }
+
+        public IActionResult RepairHistory(int pageIndex = 0)
+        {
+            var studentNo = User.Claims.FirstOrDefault(c => c.Type == "StudentNo")?.Value;
+            if (string.IsNullOrEmpty(studentNo))
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var student = _context.Students.FirstOrDefault(s => s.Sno == studentNo);
+            if (student == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var totalRepairs = _context.Repairs.Count(r => r.StudentNo == studentNo);
+            var repairs = _context.Repairs
+                .Where(r => r.StudentNo == studentNo)
+                .OrderByDescending(r => r.SubmitTime)
+                .Skip(pageIndex * PageSize)
+                .Take(PageSize)
+                .ToList();
+
+            ViewBag.HasPreviousPage = pageIndex > 0;
+            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalRepairs;
+            ViewBag.PageIndex = pageIndex;
+
+            return View(repairs);
+        }
     }
-
 }
-
-
-
