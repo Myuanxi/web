@@ -1,0 +1,113 @@
+﻿@model IEnumerable<dms.Models.ChatMessage>
+
+@{
+    ViewData["Title"] = "实时聊天";
+}
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #f9f9f9;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .input-container {
+            display: flex;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>@ViewData["Title"]</h2>
+        <div class="messages" id="messageContainer">
+            @foreach (var message in Model)
+            {
+                <div class="message">
+                    <strong>@message.SenderId:</strong> @message.Message
+                    <br />
+                    <small>@message.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</small>
+                </div>
+            }
+        </div>
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="输入消息..." />
+            <button onclick="sendMessage()">发送</button>
+        </div>
+    </div>
+
+    <script>
+        function sendMessage() {
+            var messageInput = document.getElementById('messageInput');
+            var message = messageInput.value;
+            if (message.trim() !== '') {
+                // 发送消息到服务器
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '@Url.Action("SendMessage", "Student")', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        // 更新消息列表
+                        var messageContainer = document.getElementById('messageContainer');
+                        var newMessage = document.createElement('div');
+                        newMessage.className = 'message';
+                        newMessage.innerHTML = '<strong>你:</strong> ' + message + '<br /><small>刚刚</small>';
+                        messageContainer.appendChild(newMessage);
+                        messageInput.value = '';
+                    }
+                };
+                xhr.send(JSON.stringify({ message: message }));
+            }
+        }
+    </script>
+</body>
+</html>

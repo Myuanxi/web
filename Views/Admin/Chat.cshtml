@@ -1,0 +1,143 @@
+﻿@model IEnumerable<dms.Models.ChatMessage>
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>与学生的实时聊天</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #f9f9f9;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .input-container {
+            display: flex;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        select {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>联系学生</h2>
+
+        <form id="studentSelectForm">
+            <label for="studentSelect">选择学生：</label>
+            <select id="studentSelect" name="studentId" onchange="loadChatMessages()">
+                <option value="">-- 请选择学生 --</option>
+                @foreach (var student in ViewBag.Students)
+                {
+                    <option value="@student.Id">@student.Sname (@student.Sno)</option>
+                }
+            </select>
+        </form>
+
+        <div class="messages" id="messageContainer">
+            <!-- 聊天记录 -->
+        </div>
+
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="输入消息..." />
+            <button onclick="sendMessage()">发送</button>
+        </div>
+    </div>
+
+    <script>
+        function loadChatMessages() {
+            var studentId = document.getElementById('studentSelect').value;
+            if (studentId) {
+                fetch('@Url.Action("GetChatMessages", "Admin")?studentId=' + studentId)
+                    .then(response => response.json())
+                    .then(data => {
+                        var messageContainer = document.getElementById('messageContainer');
+                        messageContainer.innerHTML = '';
+                        data.forEach(message => {
+                            var newMessage = document.createElement('div');
+                            newMessage.className = 'message';
+                            newMessage.innerHTML = '<strong>' + message.senderName + ':</strong> ' + message.message + '<br /><small>' + new Date(message.timestamp).toLocaleString() + '</small>';
+                            messageContainer.appendChild(newMessage);
+                        });
+                    });
+            }
+        }
+
+        function sendMessage() {
+            var studentId = document.getElementById('studentSelect').value;
+            var messageInput = document.getElementById('messageInput');
+            var message = messageInput.value;
+
+            if (studentId && message.trim() !== '') {
+                fetch('@Url.Action("SendMessage", "Admin")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ ReceiverId: studentId, Message: message })
+                }).then(response => {
+                    if (response.ok) {
+                        var messageContainer = document.getElementById('messageContainer');
+                        var newMessage = document.createElement('div');
+                        newMessage.className = 'message';
+                        newMessage.innerHTML = '<strong>你:</strong> ' + message + '<br /><small>刚刚</small>';
+                        messageContainer.appendChild(newMessage);
+                        messageInput.value = '';
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

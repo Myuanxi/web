@@ -13,19 +13,14 @@ builder.Services.AddDbContext<DmsContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
                      new MySqlServerVersion(new Version(8, 0, 28))));
 
-// 使用工厂方法注册 ChatWebSocketHandler
-builder.Services.AddScoped<ChatWebSocketHandler>(provider =>
-{
-    var context = provider.GetRequiredService<DmsContext>();
-    return new ChatWebSocketHandler(context);
-});
-
-// 添加身份验证和 Cookie 认证
+// 添加身份验证
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/Auth/Login";
     });
+
+builder.Services.AddSingleton<ChatWebSocketHandler>();
 
 var app = builder.Build();
 
@@ -40,9 +35,22 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
 
-app.UseAuthentication(); // 添加这一行来启用身份验证
-app.UseAuthorization(); // 确保启用授权
+app.UseWebSockets();
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/ws")
+    {
+        var handler = context.RequestServices.GetRequiredService<ChatWebSocketHandler>();
+        await handler.HandleWebSocketAsync(context);
+    }
+    else
+    {
+        await next();
+    }
+});
 
 // 将默认控制器设置为 AuthController
 app.MapControllerRoute(

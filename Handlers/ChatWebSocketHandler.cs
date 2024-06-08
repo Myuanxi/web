@@ -1,70 +1,63 @@
-﻿using System.Net.WebSockets;
+﻿using Microsoft.AspNetCore.Http;
+using System.Net.WebSockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Concurrent;
+using Microsoft.Extensions.DependencyInjection;
 using dms.Models;
-using Microsoft.EntityFrameworkCore;
 
 public class ChatWebSocketHandler
 {
-    private readonly DmsContext _context;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public ChatWebSocketHandler(DmsContext context)
+    public ChatWebSocketHandler(IServiceScopeFactory scopeFactory)
     {
-        _context = context;
+        _scopeFactory = scopeFactory;
     }
 
-    private static ConcurrentDictionary<WebSocket, string> _sockets = new ConcurrentDictionary<WebSocket, string>();
-
-    public async Task HandleAsync(WebSocket socket)
+    public async Task HandleWebSocketAsync(HttpContext context)
     {
-        _sockets.TryAdd(socket, null);
+        if (context.WebSockets.IsWebSocketRequest)
+        {
+            WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
+            await HandleWebSocketCommunication(webSocket);
+        }
+        else
+        {
+            context.Response.StatusCode = 400;
+        }
+    }
 
+    private async Task HandleWebSocketCommunication(WebSocket webSocket)
+    {
         var buffer = new byte[1024 * 4];
-        var result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+        WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
 
         while (!result.CloseStatus.HasValue)
         {
-            var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-            var messageParts = message.Split('|');
-            if (messageParts.Length == 3)
+            using (var scope = _scopeFactory.CreateScope())
             {
-                var senderId = int.Parse(messageParts[0]);
-                var receiverId = int.Parse(messageParts[1]);
-                var chatMessage = messageParts[2];
+                var context = scope.ServiceProvider.GetRequiredService<DmsContext>();
 
-                // 保存聊天记录到数据库
-                var chatRecord = new ChatMessage
+                var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                var parts = message.Split('|');
+                var senderId = int.Parse(parts[0]);
+                var receiverId = int.Parse(parts[1]);
+                var chatMessage = new ChatMessage
                 {
                     SenderId = senderId,
                     ReceiverId = receiverId,
-                    Message = chatMessage,
+                    Message = parts[2],
                     Timestamp = DateTime.Now
                 };
-                _context.ChatMessages.Add(chatRecord);
-                await _context.SaveChangesAsync();
 
-                // 广播消息
-                await BroadcastMessageAsync($"{senderId}|{chatMessage}");
+                context.ChatMessages.Add(chatMessage);
+                await context.SaveChangesAsync();
             }
 
-            result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+            await webSocket.SendAsync(new ArraySegment<byte>(buffer, 0, result.Count), result.MessageType, result.EndOfMessage, CancellationToken.None);
+            result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
         }
 
-        _sockets.TryRemove(socket, out _);
-        await socket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
-    }
-
-    private async Task BroadcastMessageAsync(string message)
-    {
-        var buffer = Encoding.UTF8.GetBytes(message);
-        foreach (var socket in _sockets.Keys)
-        {
-            if (socket.State == WebSocketState.Open)
-            {
-                await socket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
-            }
-        }
+        await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
     }
 }

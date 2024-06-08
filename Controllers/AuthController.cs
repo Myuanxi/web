@@ -31,6 +31,7 @@ namespace dms.Controllers
             {
                 var claims = new List<Claim>
                 {
+                    new Claim(ClaimTypes.NameIdentifier, admin.Id.ToString()),
                     new Claim(ClaimTypes.Name, admin.Aname),
                     new Claim(ClaimTypes.Role, "Admin")
                 };

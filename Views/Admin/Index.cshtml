@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+﻿@model IEnumerable<dms.Models.Student>
+
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -76,25 +78,11 @@
                 <li><a href="/Admin/EntryRegistration">出入登记</a></li>
                 <li><a href="/Admin/VisitorRegistration">来访登记</a></li>
                 <li><a href="/Admin/Notifications">通知和提醒</a></li>
-                <a href="@Url.Action("Chat", "Admin")" class="button">联系学生</a>
+                <li><a href="/Admin/Chat">联系学生</a></li>
             </ul>
         </div>
         <div class="main-content" id="main-content">
-            <!-- 主体内容部分 -->
         </div>
     </div>
-
-    <script>
-        function showContent(section) {
-            const content = {
-                dormManagement: '宿舍管理内容...',
-                studentManagement: '学生管理内容...',
-                entryRegistration: '出入登记内容...',
-                visitorRegistration: '来访登记内容...',
-                notifications: '通知和提醒内容...'
-            };
-            document.getElementById('main-content').innerText = content[section];
-        }
-    </script>
 </body>
 </html>

@@ -50,13 +50,13 @@ namespace dms.Controllers
                 return RedirectToAction("Login", "Auth");
             }
 
-            var dormitory = _context.Dormitories.FirstOrDefault(d => d.Id == student.DId); // 这里引用 DbSet<Dormitory>
+            var dormitory = _context.Dormitories.FirstOrDefault(d => d.Id == student.DId);
             if (dormitory == null)
             {
                 return RedirectToAction("Index");
             }
 
-            var admin = _context.Admins.FirstOrDefault(a => a.Id == dormitory.AId); // 使用 AId 列
+            var admin = _context.Admins.FirstOrDefault(a => a.Id == dormitory.AId);
             if (admin == null)
             {
                 return RedirectToAction("Index");
@@ -75,57 +75,46 @@ namespace dms.Controllers
         }
 
         [HttpPost]
-        public IActionResult SubmitRepair(string address, string description, string category)
-        {
-            var studentName = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value; // 获取当前登录用户的姓名
-            var studentNo = User.Claims.FirstOrDefault(c => c.Type == "StudentNo")?.Value; // 获取当前登录用户的学号
-
-            var repair = new Repair
-            {
-                StudentName = studentName,
-                StudentNo = studentNo,
-                Address = address,
-                Description = description,
-                Category = category,
-                SubmitTime = DateTime.Now,
-                Status = "未开始"
-            };
-
-            _context.Repairs.Add(repair);
-            _context.SaveChanges();
-
-            ViewBag.Message = "报修提交成功！";
-
-            return View("RepairConfirmation");
-        }
-
-        public IActionResult RepairHistory(int pageIndex = 0)
+        public IActionResult SendMessage([FromBody] ChatMessageModel messageModel)
         {
             var studentNo = User.Claims.FirstOrDefault(c => c.Type == "StudentNo")?.Value;
             if (string.IsNullOrEmpty(studentNo))
             {
-                return RedirectToAction("Login", "Auth");
+                return BadRequest("未登录");
             }
 
             var student = _context.Students.FirstOrDefault(s => s.Sno == studentNo);
             if (student == null)
             {
-                return RedirectToAction("Login", "Auth");
+                return BadRequest("用户不存在");
             }
 
-            var totalRepairs = _context.Repairs.Count(r => r.StudentNo == studentNo);
-            var repairs = _context.Repairs
-                .Where(r => r.StudentNo == studentNo)
-                .OrderByDescending(r => r.SubmitTime)
-                .Skip(pageIndex * PageSize)
-                .Take(PageSize)
-                .ToList();
+            var dormitory = _context.Dormitories.FirstOrDefault(d => d.Id == student.DId);
+            if (dormitory == null)
+            {
+                return BadRequest("宿舍不存在");
+            }
 
-            ViewBag.HasPreviousPage = pageIndex > 0;
-            ViewBag.HasNextPage = (pageIndex + 1) * PageSize < totalRepairs;
-            ViewBag.PageIndex = pageIndex;
+            var admin = _context.Admins.FirstOrDefault(a => a.Id == dormitory.AId);
+            if (admin == null)
+            {
+                return BadRequest("管理员不存在");
+            }
 
-            return View(repairs);
+            var chatMessage = new ChatMessage
+            {
+                SenderId = student.Id,
+                ReceiverId = admin.Id,
+                Message = messageModel.Message,
+                Timestamp = DateTime.Now
+            };
+
+            _context.ChatMessages.Add(chatMessage);
+            _context.SaveChanges();
+
+            return Ok();
         }
     }
+
+
 }
